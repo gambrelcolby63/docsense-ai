@@ -1,0 +1,43 @@
+# Demo stack. The API is pinned to the mock provider so `docker compose up`
+# answers questions without an API key. Edit the environment below to point
+# LLM_PROVIDER at an OpenAI-compatible host.
+
+services:
+  api:
+    build:
+      context: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////data/docsense.db
+      LLM_PROVIDER: mock
+      EMBEDDING_PROVIDER: local
+      CORS_ORIGINS: http://localhost:3000
+    volumes:
+      - api-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  api-data:
