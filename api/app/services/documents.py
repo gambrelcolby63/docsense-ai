@@ -119,6 +119,11 @@ def ask(
         raise DocumentServiceError(502, str(exc)) from exc
 
     ranked = retrieve(document.chunks, query_vector, settings.retrieval_k)
+    # A zero score means the passage shares no terms with the question.
+    # Keep it only when nothing was actually similar, so the UI can show
+    # the nearest passage on a miss without padding a good answer.
+    matched = [item for item in ranked if item[1] > 0]
+    ranked = matched or ranked[:1]
     passages: list[tuple[int, int, str, float]] = []
     citations: list[Citation] = []
     for label, (chunk, score) in enumerate(ranked, start=1):

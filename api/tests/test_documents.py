@@ -52,7 +52,7 @@ def test_upload_summary_chat_history_and_delete(client):
     assert "Mina Solberg" in body["answer"]
     assert body["citations"]
     assert "Mina Solberg" in body["citations"][0]["text"]
-    assert body["citations"][0]["score"] > 0
+    assert all(item["score"] > 0 for item in body["citations"])
     assert "Fjord-1842" not in body["citations"][0]["text"]
 
     missing = client.post(
